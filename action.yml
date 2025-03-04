@@ -59,7 +59,7 @@ runs:
       if: ${{ inputs.aws-account }}
       run: |  
         cd fc-aws-cdk
-        npm run cdk deploy -- --require-approval never -c webPath="../../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account }}
+        npm run cdk deploy -- --require-approval never -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account }}
       shell: bash
 
     - name: Checkout Azure Bicep template
