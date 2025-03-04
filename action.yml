@@ -23,7 +23,7 @@ runs:
     - uses: actions/checkout@v4
       if: ${{ inputs.aws-account }}
       with:
-        repository: deploy-template-aws-${{ inputs.fireclover-architecture-template }}
+        repository: fireclover/deploy-template-aws-${{ inputs.fireclover-architecture-template }}
         ref: 'main'
         #github-server-url: ''
         
@@ -36,7 +36,7 @@ runs:
     - uses: actions/checkout@v4
       if: ${{ inputs.azure-tenant }}
       with:
-        repository: deploy-template-azure-${{ inputs.fireclover-architecture-template }}
+        repository: fireclover/deploy-template-azure-${{ inputs.fireclover-architecture-template }}
         ref: 'main'
         #github-server-url: ''
         
