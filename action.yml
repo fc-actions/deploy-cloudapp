@@ -29,6 +29,7 @@ runs:
         
     - run: |  
         echo ${{ inputs.fireclover-architecture-template }}
+        ls
         # left for future use #cp ${GITHUB_ACTION_PATH}/.config-files ~/
       shell: bash
 
