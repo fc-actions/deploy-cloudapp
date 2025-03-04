@@ -1,0 +1,53 @@
+# action.yml
+name: 'FireClover Cloud Application Deployment'
+description: 'FireClover Cloud Application Deployment'
+branding:
+  icon: 'aperture'
+  color: 'orange'
+inputs:
+  fireclover-subscription:
+    description: 'The FireClover Subscription'
+  aws-account:
+    description: 'The aws account registered at FireClover on your FireClover subscription'
+  azure-tenant:  
+    description: 'The azure tenant registered at FireClover on your FireClover subscription'
+  azure-subscription:  
+    description: 'The azure subscription registered at FireClover on your FireClover subscription'
+  fireclover-architecture-template:
+    description: 'The cloud deployment template to use for deployment'
+    default: 'spa-static-site'
+    
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+      if: ${{ inputs.aws-account }}
+      with:
+        repository: deploy-template-aws-${{ inputs.fireclover-architecture-template }}
+        ref: 'main'
+        #github-server-url: ''
+        
+    - run: |  
+        echo ${{ inputs.fireclover-architecture-template }}
+        # left for future use #cp ${GITHUB_ACTION_PATH}/.config-files ~/
+      shell: bash
+
+    - uses: actions/checkout@v4
+      if: ${{ inputs.azure-tenant }}
+      with:
+        repository: deploy-template-azure-${{ inputs.fireclover-architecture-template }}
+        ref: 'main'
+        #github-server-url: ''
+        
+    - id: scan
+      run: |
+        echo "vulns=grype-${filename}.json" >> $GITHUB_OUTPUT
+      shell: bash
+
+outputs:
+  sbom:
+    value: ${{ steps.scan.outputs.sbom }}
+    description: "Path to a JSON SBOM file for the scan"
+  vulns:
+    value: ${{ steps.scan.outputs.vulns }}
+    description: "Path to a JSON results file for the vulnerability scan"
