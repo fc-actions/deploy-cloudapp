@@ -25,7 +25,7 @@ runs:
       with:
         repository: fireclover/deploy-template-aws-${{ inputs.fireclover-architecture-template }}
         ref: 'main'
-        #github-server-url: ''
+        github-server-url: 'https://github.com'
         
     - run: |  
         echo ${{ inputs.fireclover-architecture-template }}
@@ -38,7 +38,7 @@ runs:
       with:
         repository: fireclover/deploy-template-azure-${{ inputs.fireclover-architecture-template }}
         ref: 'main'
-        #github-server-url: ''
+        github-server-url: 'https://github.com'
         
     - id: scan
       run: |
