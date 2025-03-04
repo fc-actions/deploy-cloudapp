@@ -27,10 +27,11 @@ runs:
         repository: fireclover/deploy-template-aws-${{ inputs.fireclover-architecture-template }}
         ref: 'main'
         github-server-url: 'https://github.com'
+        path: fc-aws-cdk
         
     - run: |  
         echo ${{ inputs.fireclover-architecture-template }}
-        ls
+        ls fc-aws-cdk
         # left for future use #cp ${GITHUB_ACTION_PATH}/.config-files ~/
       shell: bash
 
