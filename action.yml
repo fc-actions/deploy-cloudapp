@@ -6,8 +6,15 @@ branding:
   color: 'orange'
 
 inputs:
+  dns-zone:
+    description: 'The existing DNS Zone to create new records in'
+    required: true
+  subdomain:
+    description: 'The new subdomain to create in the DNS Zone for the deployment'
+    required: true
   fireclover-subscription:
     description: 'The FireClover Subscription'
+    required: true
   aws-account:
     description: 'The aws account registered at FireClover on your FireClover subscription'
   azure-tenant:  
@@ -17,30 +24,51 @@ inputs:
   fireclover-architecture-template:
     description: 'The cloud deployment template to use for deployment'
     default: 'spa-static-site'
+  folder-redirects:
+    description: 'Will redirect urls ending in a folder path to folder/index.html. Do not use for React SPAs.'
+    default: false
+  web-path:
+    description: 'The folder of the static web to deploy'
+    default: 'dist'
+  #api-path:
+  #  description: 'The folder of the api to deploy'
     
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v4
+    - name: Checkout AWS CDK template
       if: ${{ inputs.aws-account }}
-      with:
-        repository: fireclover/deploy-template-aws-${{ inputs.fireclover-architecture-template }}
-        ref: 'main'
-        github-server-url: 'https://github.com'
-        path: fc-aws-cdk
+      run: |
+        git clone https://github.com/fireclover/deploy-template-aws-${{ inputs.fireclover-architecture-template }}.git fc-aws-cdk
         
-    - run: |  
+    - name: Synth AWS
+      if: ${{ inputs.aws-account }}
+      run: |  
         echo ${{ inputs.fireclover-architecture-template }}
-        ls fc-aws-cdk
+        cd fc-aws-cdk
+        npm i
+        npm run build
+        npm run cdk synth -- --require-approval never -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account }}
         # left for future use #cp ${GITHUB_ACTION_PATH}/.config-files ~/
       shell: bash
 
-    - uses: actions/checkout@v4
-      if: ${{ inputs.azure-tenant }}
+    - name: AWS Sustainability Scanner
+      if: ${{ inputs.aws-account }}
+      uses: aws-actions/sustainability-scanner@v1
       with:
-        repository: fireclover/deploy-template-azure-${{ inputs.fireclover-architecture-template }}
-        ref: 'main'
-        github-server-url: 'https://github.com'
+        file: 'fc-aws-cdk/cdk.out/*template.json'
+
+    - name: Deploy AWS
+      if: ${{ inputs.aws-account }}
+      run: |  
+        cd fc-aws-cdk
+        npm run cdk deploy -- --require-approval never -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account }}
+      shell: bash
+
+    - name: Checkout Azure Bicep template
+      if: ${{ inputs.azure-tenant }}
+      run: |
+        git clone https://github.com/fireclover/deploy-template-azure-${{ inputs.fireclover-architecture-template }}.git fc-azure-bicep
         
     - id: scan
       run: |
