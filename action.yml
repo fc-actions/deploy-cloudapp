@@ -4,6 +4,7 @@ description: 'FireClover Cloud Application Deployment'
 branding:
   icon: 'aperture'
   color: 'orange'
+
 inputs:
   fireclover-subscription:
     description: 'The FireClover Subscription'
