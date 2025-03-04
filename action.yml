@@ -23,13 +23,10 @@ inputs:
     description: 'The azure subscription registered at FireClover on your FireClover subscription'
   fireclover-architecture-template:
     description: 'The cloud deployment template to use for deployment'
-    default: 'spa-static-site'
   folder-redirects:
     description: 'Will redirect urls ending in a folder path to folder/index.html. Do not use for React SPAs.'
-    default: false
   web-path:
     description: 'The folder of the static web to deploy'
-    default: 'dist'
   #api-path:
   #  description: 'The folder of the api to deploy'
     
@@ -39,7 +36,7 @@ runs:
     - name: Checkout AWS CDK template
       if: ${{ inputs.aws-account }}
       run: |
-        git clone https://github.com/fireclover/deploy-template-aws-${{ inputs.fireclover-architecture-template }}.git fc-aws-cdk
+        git clone https://github.com/fireclover/deploy-template-aws-${{ inputs.fireclover-architecture-template || 'spa-static-site' }}.git fc-aws-cdk
         
     - name: Synth AWS
       if: ${{ inputs.aws-account }}
@@ -48,7 +45,7 @@ runs:
         cd fc-aws-cdk
         npm i
         npm run build
-        npm run cdk synth -- --require-approval never -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account }}
+        npm run cdk synth -- --require-approval never -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account }}
         # left for future use #cp ${GITHUB_ACTION_PATH}/.config-files ~/
       shell: bash
 
@@ -62,7 +59,7 @@ runs:
       if: ${{ inputs.aws-account }}
       run: |  
         cd fc-aws-cdk
-        npm run cdk deploy -- --require-approval never -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account }}
+        npm run cdk deploy -- --require-approval never -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account }}
       shell: bash
 
     - name: Checkout Azure Bicep template
