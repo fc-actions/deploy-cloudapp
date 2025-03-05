@@ -25,5 +25,5 @@ jobs:
         web-path: 'dist'
 ```
 
-### Example uing envs
+### Example using envs
 Checkout or use the template available on your FireClover platform instance at **<my-org>/example-react-vite-ts** 
