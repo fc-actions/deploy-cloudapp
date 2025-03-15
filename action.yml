@@ -73,6 +73,7 @@ runs:
       if: ${{ inputs.azure-tenant }}
       run: |
         git clone https://github.com/fireclover/deploy-template-azure-${{ inputs.fireclover-architecture-template }}.git fc-azure-bicep
+      shell: bash
         
     - id: scan
       run: |
