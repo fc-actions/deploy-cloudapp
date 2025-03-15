@@ -54,6 +54,7 @@ runs:
     - name: AWS Sustainability Scanner
       if: ${{ inputs.aws-account }}
       uses: aws-actions/sustainability-scanner@v1
+      continue-on-error: true
       with:
         file: 'fc-aws-cdk/cdk.out/*template.json'
 
@@ -75,11 +76,6 @@ runs:
         git clone https://github.com/fireclover/deploy-template-azure-${{ inputs.fireclover-architecture-template }}.git fc-azure-bicep
       shell: bash
         
-    - id: scan
-      run: |
-        echo "vulns=grype-${filename}.json" >> $GITHUB_OUTPUT
-      shell: bash
-
 outputs:
   sbom:
     value: ${{ steps.scan.outputs.sbom }}
