@@ -37,6 +37,7 @@ runs:
       if: ${{ inputs.aws-account }}
       run: |
         git clone https://github.com/fireclover/deploy-template-aws-${{ inputs.fireclover-architecture-template || 'spa-static-site' }}.git fc-aws-cdk
+      shell: bash
         
     - name: Build CDK AWS template
       if: ${{ inputs.aws-account }}
