@@ -15,11 +15,11 @@ inputs:
   fireclover-subscription:
     description: 'The FireClover Subscription'
     required: true
-  aws-account:
+  aws-account-id:
     description: 'The aws account registered at FireClover on your FireClover subscription'
-  azure-tenant:  
+  azure-tenant-id:  
     description: 'The azure tenant registered at FireClover on your FireClover subscription'
-  azure-subscription:  
+  azure-subscription-id:  
     description: 'The azure subscription registered at FireClover on your FireClover subscription'
   fireclover-architecture-template:
     description: 'The cloud deployment template to use for deployment'
@@ -29,44 +29,47 @@ inputs:
     description: 'The folder of the static web to deploy. Static web will be available at <domain>/*'
   api-path:
     description: 'The folder of the api to deploy. API will be available at <domain>/api/*'
+  scan-cdk:
+    description: 'Use the AWS Sustainability scanner for the resulting CDK'
+    default: false
     
 runs:
   using: composite
   steps:
     - name: Checkout AWS CDK template
-      if: ${{ inputs.aws-account }}
+      if: ${{ inputs.aws-account-id }}
       run: |
         git clone https://github.com/fireclover/deploy-template-aws-${{ inputs.fireclover-architecture-template || 'spa-static-site' }}.git fc-aws-cdk
       shell: bash
         
     - name: Build CDK AWS template
-      if: ${{ inputs.aws-account }}
+      if: ${{ inputs.aws-account-id }}
       run: |  
         echo ${{ inputs.fireclover-architecture-template }}
         cd fc-aws-cdk
         npm i
         npm run build
         # synth is not needed
-        #npm run cdk synth -- --require-approval never -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account }}
+        #npm run cdk synth -- --require-approval never -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
         # left for future use #cp ${GITHUB_ACTION_PATH}/.config-files ~/
       shell: bash
 
     - name: AWS Sustainability Scanner
-      if: ${{ inputs.aws-account }}
+      if: ${{ inputs.aws-account-id }}
       uses: aws-actions/sustainability-scanner@v1
       continue-on-error: true
       with:
         file: 'fc-aws-cdk/cdk.out/*template.json'
 
     - name: Deploy AWS
-      if: ${{ inputs.aws-account }}
+      if: ${{ inputs.aws-account-id && inputs.scan-cdk }}
       run: |  
         cd fc-aws-cdk
         if [ -z "${{ inputs.api-path }}" ]
         then
-            npm run cdk deploy -- --require-approval never -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account }}
+            npm run cdk deploy -- --require-approval never -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
         else
-            npm run cdk deploy -- --require-approval never -c apiPath="../${{ inputs.api-path }}" -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account }}
+            npm run cdk deploy -- --require-approval never -c apiPath="../${{ inputs.api-path }}" -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
         fi
       shell: bash
 

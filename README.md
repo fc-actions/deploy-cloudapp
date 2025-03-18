@@ -18,7 +18,7 @@ jobs:
 
     - uses: fc-actions/deploy-cloudapp@v0.0.8
       with:
-        aws-account: '123456789012'
+        aws-account-id: '123456789012'
         fireclover-subscription: 'my-fireclover-subscription-token'
         dns-zone: 'my-org.aws.fireclover.cloud'
         subdomain: 'my-service'
@@ -42,7 +42,7 @@ jobs:
 
     - uses: fc-actions/deploy-cloudapp@v0.0.8
       with:
-        aws-account: '123456789012'
+        aws-account-id: '123456789012'
         fireclover-subscription: 'my-fireclover-subscription-token'
         dns-zone: 'my-org.aws.fireclover.cloud'
         subdomain: 'my-service'
@@ -68,7 +68,7 @@ jobs:
 
     - uses: fc-actions/deploy-cloudapp@v0.0.8
       with:
-        aws-account: '123456789012'
+        aws-account-id: '123456789012'
         fireclover-subscription: 'my-fireclover-subscription-token'
         dns-zone: 'my-org.aws.fireclover.cloud'
         subdomain: 'my-service'
