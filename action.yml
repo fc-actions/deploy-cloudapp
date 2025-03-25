@@ -32,6 +32,9 @@ inputs:
   scan-cdk:
     description: 'Use the AWS Sustainability scanner for the resulting CDK'
     default: false
+  skip-bootstrap:
+    description: 'Run bootstrap for the account using CDK'
+    default: false
     
 runs:
   using: composite
@@ -49,22 +52,43 @@ runs:
         cd fc-aws-cdk
         npm i
         npm run build
-        npm run cdk bootstrap -- --require-approval never -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
-        # synth is not needed
-        #npm run cdk synth -- --require-approval never -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
         # left for future use #cp ${GITHUB_ACTION_PATH}/.config-files ~/
+      shell: bash
+      
+    - name: Bootstrap AWS
+      if: ${{ inputs.aws-account-id && !inputs.skip-bootstrap }}
+      run: |  
+        cd fc-aws-cdk
+        if [ -z "${{ inputs.api-path }}" ]
+        then
+            npm run cdk bootstrap -- --require-approval never -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
+        else
+            npm run cdk bootstrap -- --require-approval never -c apiPath="../${{ inputs.api-path }}" -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
+        fi
+      shell: bash
+      
+    - name: Synth AWS
+      if: ${{ inputs.aws-account-id && inputs.scan-cdk }}
+      run: |  
+        cd fc-aws-cdk
+        if [ -z "${{ inputs.api-path }}" ]
+        then
+            npm run cdk synth -- --require-approval never -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
+        else
+            npm run cdk synth -- --require-approval never -c apiPath="../${{ inputs.api-path }}" -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
+        fi
       shell: bash
 
     # This never yields any results anyway
     - name: AWS Sustainability Scanner
-      if: ${{ inputs.scan-cdk }}
+      if: ${{ inputs.aws-account-id && inputs.scan-cdk }}
       uses: aws-actions/sustainability-scanner@v1
       continue-on-error: true
       with:
         file: 'fc-aws-cdk/cdk.out/*template.json'
 
     - name: Deploy AWS
-      if: ${{ inputs.aws-account-id && inputs.scan-cdk }}
+      if: ${{ inputs.aws-account-id }}
       run: |  
         cd fc-aws-cdk
         if [ -z "${{ inputs.api-path }}" ]
