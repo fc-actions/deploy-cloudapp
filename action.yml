@@ -49,13 +49,15 @@ runs:
         cd fc-aws-cdk
         npm i
         npm run build
+        npm run cdk bootstrap
         # synth is not needed
         #npm run cdk synth -- --require-approval never -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
         # left for future use #cp ${GITHUB_ACTION_PATH}/.config-files ~/
       shell: bash
 
+    # This never yields any results anyway
     - name: AWS Sustainability Scanner
-      if: ${{ inputs.aws-account-id }}
+      if: ${{ inputs.scan-cdk }}
       uses: aws-actions/sustainability-scanner@v1
       continue-on-error: true
       with:
