@@ -49,7 +49,7 @@ runs:
         cd fc-aws-cdk
         npm i
         npm run build
-        npm run cdk bootstrap
+        npm run cdk bootstrap -- --require-approval never -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
         # synth is not needed
         #npm run cdk synth -- --require-approval never -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
         # left for future use #cp ${GITHUB_ACTION_PATH}/.config-files ~/
