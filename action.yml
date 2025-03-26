@@ -59,7 +59,12 @@ runs:
       if: ${{ inputs.aws-account-id && !!inputs.bootstrap }}
       run: |  
         cd fc-aws-cdk
-        npm run cdk bootstrap aws://${{ inputs.aws-account-id }}/us-east-1
+        if [ -z "${{ inputs.api-path }}" ]
+        then
+            npm run cdk bootstrap -- aws://${{ inputs.aws-account-id }}/us-east-1 --require-approval never -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
+        else
+            npm run cdk bootstrap -- aws://${{ inputs.aws-account-id }}/us-east-1 --require-approval never -c apiPath="../${{ inputs.api-path }}" -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
+        fi        
       shell: bash
       
     - name: Synth AWS
