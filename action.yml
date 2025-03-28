@@ -71,9 +71,9 @@ runs:
         cd fc-aws-cdk
         if [ -z "${{ inputs.api-path }}" ]
         then
-            npm run cdk synth -- --require-approval never -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
+            npm run cdk synth -- --require-approval never -c folderRedirects=${{ inputs.folder-redirects || false }} -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
         else
-            npm run cdk synth -- --require-approval never -c apiPath="../${{ inputs.api-path }}" -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
+            npm run cdk synth -- --require-approval never -c folderRedirects=${{ inputs.folder-redirects || false }} -c apiPath="../${{ inputs.api-path }}" -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
         fi
       shell: bash
 
@@ -91,9 +91,9 @@ runs:
         cd fc-aws-cdk
         if [ -z "${{ inputs.api-path }}" ]
         then
-            npm run cdk deploy -- --require-approval never -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
+            npm run cdk deploy -- --require-approval never -c folderRedirects=${{ inputs.folder-redirects || false }} -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
         else
-            npm run cdk deploy -- --require-approval never -c apiPath="../${{ inputs.api-path }}" -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
+            npm run cdk deploy -- --require-approval never -c folderRedirects=${{ inputs.folder-redirects || false }} -c apiPath="../${{ inputs.api-path }}" -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
         fi
       shell: bash
 
