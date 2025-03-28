@@ -17,6 +17,9 @@ inputs:
     required: true
   aws-account-id:
     description: 'The aws account registered at FireClover on your FireClover subscription'
+  region:
+    description: 'This will likely not work if changed, due to certificates of CloudFront needs us-east-1.'
+    default: 'us-east-1'
   azure-tenant-id:  
     description: 'The azure tenant registered at FireClover on your FireClover subscription'
   azure-subscription-id:  
@@ -33,6 +36,7 @@ inputs:
     description: 'Use the AWS Sustainability scanner for the resulting CDK'
   bootstrap:
     description: 'Run bootstrap for the account using CDK'
+    default: true
     
 runs:
   using: composite
@@ -54,14 +58,14 @@ runs:
       shell: bash
       
     - name: Bootstrap AWS
-      if: ${{ inputs.aws-account-id && (inputs.bootstrap != false) }}
+      if: ${{ inputs.aws-account-id && inputs.bootstrap }}
       run: |  
         cd fc-aws-cdk
         if [ -z "${{ inputs.api-path }}" ]
         then
-            npm run cdk bootstrap -- aws://${{ inputs.aws-account-id }}/us-east-1 --require-approval never -c folderRedirects=${{ inputs.folder-redirects || false }} -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
+            npm run cdk bootstrap -- aws://${{ inputs.aws-account-id }}/${{ inputs.region || 'us-east-1' }} --require-approval never -c folderRedirects=${{ inputs.folder-redirects || false }} -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }}
         else
-            npm run cdk bootstrap -- aws://${{ inputs.aws-account-id }}/us-east-1 --require-approval never -c folderRedirects=${{ inputs.folder-redirects || false }} -c apiPath="../${{ inputs.api-path }}" -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
+            npm run cdk bootstrap -- aws://${{ inputs.aws-account-id }}/${{ inputs.region || 'us-east-1' }} --require-approval never -c folderRedirects=${{ inputs.folder-redirects || false }} -c apiPath="../${{ inputs.api-path }}" -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }}
         fi        
       shell: bash
       
@@ -71,9 +75,9 @@ runs:
         cd fc-aws-cdk
         if [ -z "${{ inputs.api-path }}" ]
         then
-            npm run cdk synth -- --require-approval never -c folderRedirects=${{ inputs.folder-redirects || false }} -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
+            npm run cdk synth -- --require-approval never -c folderRedirects=${{ inputs.folder-redirects || false }} -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }}
         else
-            npm run cdk synth -- --require-approval never -c folderRedirects=${{ inputs.folder-redirects || false }} -c apiPath="../${{ inputs.api-path }}" -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
+            npm run cdk synth -- --require-approval never -c folderRedirects=${{ inputs.folder-redirects || false }} -c apiPath="../${{ inputs.api-path }}" -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }}
         fi
       shell: bash
 
@@ -91,9 +95,9 @@ runs:
         cd fc-aws-cdk
         if [ -z "${{ inputs.api-path }}" ]
         then
-            npm run cdk deploy -- --require-approval never -c folderRedirects=${{ inputs.folder-redirects || false }} -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
+            npm run cdk deploy -- --require-approval never -c folderRedirects=${{ inputs.folder-redirects || false }} -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }}
         else
-            npm run cdk deploy -- --require-approval never -c folderRedirects=${{ inputs.folder-redirects || false }} -c apiPath="../${{ inputs.api-path }}" -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }}
+            npm run cdk deploy -- --require-approval never -c folderRedirects=${{ inputs.folder-redirects || false }} -c apiPath="../${{ inputs.api-path }}" -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }}
         fi
       shell: bash
 
