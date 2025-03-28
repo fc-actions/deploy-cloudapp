@@ -54,7 +54,7 @@ runs:
       shell: bash
       
     - name: Bootstrap AWS
-      if: ${{ inputs.aws-account-id && (inputs.bootstrap || false) }}
+      if: ${{ inputs.aws-account-id && (inputs.bootstrap != false) }}
       run: |  
         cd fc-aws-cdk
         if [ -z "${{ inputs.api-path }}" ]
