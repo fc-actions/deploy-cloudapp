@@ -68,7 +68,7 @@ runs:
       shell: bash
       
     - name: Bootstrap AWS
-      if: ${{ inputs.aws-account-id && inputs.bootstrap }}
+      if: ${{ steps.build-cdk && inputs.bootstrap }}
       run: |
         cd fc-aws-cdk
         if [ ! -z "${{ inputs.context-file }}" ]
