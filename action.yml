@@ -35,27 +35,29 @@ inputs:
   api-handler:
     description: 'The path and function inside of the api to run.'
     default: 'dist/index.handler'
-  api-envs:
-    description: 'Environment variables for api in format { [key: string]: string; }'
   scan-cdk:
     description: 'Use the AWS Sustainability scanner for the resulting CDK'
   bootstrap:
     description: 'Run bootstrap for the account using CDK'
     default: true
   context-file:
-    description: 'CDK context file cdk.context.json that defines all context attributes for CDK. Other named parameters override the attributes in context file.'
+    description: 'CDK context file cdk.context.json that defines all context attributes for CDK. Other named parameters or cdk-parameters override the attributes in context file.'
+  cdk-parameters:
+    description: 'CDK parameters in the format of "-c parameter=value" i.e. "-c api-handler=dist/index.handler -c folder-redirects=false"'
     
 runs:
   using: composite
   steps:
     - name: Checkout AWS CDK template
       if: ${{ inputs.aws-account-id }}
+      id: checkout-cdk
       run: |
         git clone https://github.com/fireclover/deploy-template-aws-${{ inputs.fireclover-architecture-template || 'spa-static-site' }}.git fc-aws-cdk
       shell: bash
         
     - name: Build CDK AWS template
-      if: ${{ inputs.aws-account-id }}
+      id: build-cdk
+      if: ${{ steps.checkout-cdk }}
       run: |
         [ ! -z "${{ inputs.context-file }}" ] && cp "${{ inputs.context-file }}" fc-aws-cdk/cdk.context.json 
         cd fc-aws-cdk
@@ -71,7 +73,7 @@ runs:
         cd fc-aws-cdk
         if [ ! -z "${{ inputs.context-file }}" ]
         then
-          npm run cdk bootstrap -- aws://${{ inputs.aws-account-id }}/${{ inputs.region || 'us-east-1' }} --require-approval never -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }}
+          npm run cdk bootstrap -- aws://${{ inputs.aws-account-id }}/${{ inputs.region || 'us-east-1' }} --require-approval never -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }} -c subdomain=${{ inputs.subdomain }} ${{ inputs.cdk-parameters }}
         elif [ -z "${{ inputs.api-path }}" ]
         then
           npm run cdk bootstrap -- aws://${{ inputs.aws-account-id }}/${{ inputs.region || 'us-east-1' }} --require-approval never -c env='${{ inputs.api-envs }}' -c apiHandler=${{ inputs.api-handler }} -c folderRedirects=${{ inputs.folder-redirects || false }} -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }}
@@ -81,12 +83,13 @@ runs:
       shell: bash
       
     - name: Synth AWS
-      if: ${{ inputs.aws-account-id && (inputs.scan-cdk || false) }}
+      id: synth-cdk
+      if: ${{ steps.build-cdk && (inputs.scan-cdk || false) }}
       run: |
         cd fc-aws-cdk      
         if [ ! -z "${{ inputs.context-file }}" ]
         then
-          npm run cdk synth -- --require-approval never -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }}
+          npm run cdk synth -- --require-approval never -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }} -c subdomain=${{ inputs.subdomain }} ${{ inputs.cdk-parameters }}
         elif [ -z "${{ inputs.api-path }}" ]
         then
           npm run cdk synth -- --require-approval never -c env='${{ inputs.api-envs }}' -c apiHandler=${{ inputs.api-handler }} -c folderRedirects=${{ inputs.folder-redirects || false }} -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }}
@@ -97,7 +100,7 @@ runs:
 
     # This never yields any results anyway
     #- name: AWS Sustainability Scanner
-    #  if: ${{ inputs.aws-account-id && (inputs.scan-cdk || false) }}
+    #  if: ${{ steps.synth-cdk }}
     #  uses: aws-actions/sustainability-scanner@v1
     #  continue-on-error: true
     #  with:
@@ -109,7 +112,7 @@ runs:
         cd fc-aws-cdk      
         if [ ! -z "${{ inputs.context-file }}" ]
         then
-          npm run cdk deploy -- --require-approval never -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }}
+          npm run cdk deploy -- --require-approval never -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }} -c subdomain=${{ inputs.subdomain }} ${{ inputs.cdk-parameters }}
         elif [ -z "${{ inputs.api-path }}" ]
         then
           npm run cdk deploy -- --require-approval never -c env='${{ inputs.api-envs }}' -c apiHandler=${{ inputs.api-handler }} -c folderRedirects=${{ inputs.folder-redirects || false }} -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }}
@@ -118,8 +121,8 @@ runs:
         fi
       shell: bash
       
-    - name: Deploy AWS
-      if: ${{ inputs.aws-account-id }}
+    - name: Cleanup AWS CDK
+      if: ${{ steps.build-cdk }}
       run: |
         rm -rf fc-aws-cdk
       shell: bash
