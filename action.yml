@@ -107,7 +107,7 @@ runs:
     #    file: 'fc-aws-cdk/cdk.out/*template.json'
 
     - name: Deploy AWS
-      if: ${{ inputs.aws-account-id }}
+      if: ${{ steps.build-cdk }}
       run: |
         cd fc-aws-cdk      
         if [ ! -z "${{ inputs.context-file }}" ]
