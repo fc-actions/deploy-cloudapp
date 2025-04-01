@@ -48,6 +48,13 @@ inputs:
 runs:
   using: composite
   steps:
+    - uses: actions/checkout@v4
+      if: ${{ inputs.context-file }}
+      with:
+        sparse-checkout: |
+          ${{ inputs.context-file }}
+        sparse-checkout-cone-mode: false
+        
     - name: Get uuid for folder
       id: uuid
       run: | 
@@ -59,13 +66,6 @@ runs:
       run: |
         git clone https://github.com/fireclover/deploy-template-aws-${{ inputs.fireclover-architecture-template || 'spa-static-site' }}.git ${{ steps.uuid.outputs.folder }}
       shell: bash
-
-    - uses: actions/checkout@v4
-      if: ${{ inputs.context-file }}
-      with:
-        sparse-checkout: |
-          ${{ inputs.context-file }}
-        sparse-checkout-cone-mode: false
         
     - name: Build CDK AWS template
       id: build-cdk
