@@ -117,7 +117,13 @@ runs:
           npm run cdk deploy -- --require-approval never -c env='${{ inputs.api-envs }}' -c apiHandler=${{ inputs.api-handler }} -c folderRedirects=${{ inputs.folder-redirects || false }} -c apiPath="../${{ inputs.api-path }}" -c webPath="../${{ inputs.web-path || 'dist' }}" -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }}
         fi
       shell: bash
-
+      
+    - name: Deploy AWS
+      if: ${{ inputs.aws-account-id }}
+      run: |
+        rm -rf fc-aws-cdk
+      shell: bash
+      
     - name: Checkout Azure Bicep template
       if: ${{ inputs.azure-tenant }}
       run: |
