@@ -47,32 +47,34 @@ inputs:
     
 runs:
   using: composite
-  steps:
+  steps:        
+    - name: Get uuid for folder
+      id: uuid
+      run: | 
+        echo "::set-output name=uuid::$(head /dev/random|sha1sum|cut -c 1-10)"
+
     - uses: actions/checkout@v4
       if: ${{ inputs.context-file }}
       with:
         sparse-checkout: |
           ${{ inputs.context-file }}
         sparse-checkout-cone-mode: false
-        
-    - name: Get uuid for folder
-      id: uuid
-      run: | 
-        echo "::set-output name=folder::fc-aws-cdk-$(head /dev/random|sha1sum|cut -c 1-10)"
+        path: context-${{ steps.uuid.outputs.uuid }}
         
     - name: Checkout AWS CDK template
       if: ${{ inputs.aws-account-id }}
-      id: checkout-cdk
+      id: cdk
       run: |
-        git clone https://github.com/fireclover/deploy-template-aws-${{ inputs.fireclover-architecture-template || 'spa-static-site' }}.git ${{ steps.uuid.outputs.folder }}
+        git clone https://github.com/fireclover/deploy-template-aws-${{ inputs.fireclover-architecture-template || 'spa-static-site' }}.git fc-aws-cdk-${{ steps.uuid.outputs.uuid }}
+        echo "::set-output name=folder::fc-aws-cdk-${{ steps.uuid.outputs.uuid }}"
       shell: bash
         
     - name: Build CDK AWS template
       id: build-cdk
       if: ${{ inputs.aws-account-id }}
       run: |
-        [ ! -z "${{ inputs.context-file }}" ] && cp "${{ inputs.context-file }}" ${{ steps.uuid.outputs.folder }}/cdk.context.json 
-        cd ${{ steps.uuid.outputs.folder }}
+        [ ! -z "${{ inputs.context-file }}" ] && cp "context-${{ steps.uuid.outputs.uuid }}/${{ inputs.context-file }}" ${{ steps.cdk.outputs.folder }}/cdk.context.json 
+        cd ${{ steps.cdk.outputs.folder }}
         echo "Deploying using ${{ inputs.fireclover-architecture-template }} @ $(git rev-parse --short HEAD)"
         npm i
         npm run build
@@ -82,7 +84,7 @@ runs:
     - name: Bootstrap AWS
       if: ${{ inputs.aws-account-id && inputs.bootstrap }}
       run: |
-        cd ${{ steps.uuid.outputs.folder }}
+        cd ${{ steps.cdk.outputs.folder }}
         if [ ! -z "${{ inputs.context-file }}" ]
         then
           npm run cdk bootstrap -- aws://${{ inputs.aws-account-id }}/${{ inputs.region || 'us-east-1' }} --require-approval never -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }} -c subdomain=${{ inputs.subdomain }} ${{ inputs.cdk-parameters }}
@@ -98,7 +100,7 @@ runs:
       id: synth-cdk
       if: ${{ inputs.aws-account-id && (inputs.scan-cdk || false) }}
       run: |
-        cd ${{ steps.uuid.outputs.folder }}     
+        cd ${{ steps.cdk.outputs.folder }}     
         if [ ! -z "${{ inputs.context-file }}" ]
         then
           npm run cdk synth -- --require-approval never -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }} -c subdomain=${{ inputs.subdomain }} ${{ inputs.cdk-parameters }}
@@ -121,7 +123,7 @@ runs:
     - name: Deploy AWS
       if: ${{ inputs.aws-account-id }}
       run: |
-        cd ${{ steps.uuid.outputs.folder }}      
+        cd ${{ steps.cdk.outputs.folder }}      
         if [ ! -z "${{ inputs.context-file }}" ]
         then
           npm run cdk deploy -- --require-approval never -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }} -c subdomain=${{ inputs.subdomain }} ${{ inputs.cdk-parameters }}
@@ -136,7 +138,7 @@ runs:
     - name: Cleanup AWS CDK
       if: ${{ inputs.aws-account-id }}
       run: |
-        rm -rf ${{ steps.uuid.outputs.folder }}
+        rm -rf ${{ steps.cdk.outputs.folder }}
       shell: bash
       
     - name: Checkout Azure Bicep template
