@@ -51,13 +51,21 @@ runs:
     - name: Get uuid for folder
       id: uuid
       run: | 
-        echo "::set-output name=folder::fc-aws-cdk-$(head /dev/random|sha1sum|cut -c 1-10)"  
+        echo "::set-output name=folder::fc-aws-cdk-$(head /dev/random|sha1sum|cut -c 1-10)"
+        
     - name: Checkout AWS CDK template
       if: ${{ inputs.aws-account-id }}
       id: checkout-cdk
       run: |
         git clone https://github.com/fireclover/deploy-template-aws-${{ inputs.fireclover-architecture-template || 'spa-static-site' }}.git ${{ steps.uuid.outputs.folder }}
       shell: bash
+
+    - uses: actions/checkout@v4
+      if: ${{ inputs.context-file }}
+      with:
+        sparse-checkout: |
+          ${{ inputs.context-file }}
+        sparse-checkout-cone-mode: false
         
     - name: Build CDK AWS template
       id: build-cdk
