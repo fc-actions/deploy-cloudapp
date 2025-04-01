@@ -53,7 +53,7 @@ runs:
       run: | 
         echo "::set-output name=folder::fc-aws-cdk-$(uuidgen)"  
     - name: Checkout AWS CDK template
-      if: ${{ inputs.aws-account-id && steps.uuid }}
+      if: ${{ inputs.aws-account-id }}
       id: checkout-cdk
       run: |
         git clone https://github.com/fireclover/deploy-template-aws-${{ inputs.fireclover-architecture-template || 'spa-static-site' }}.git ${{ steps.uuid.outputs.folder }}
@@ -61,7 +61,7 @@ runs:
         
     - name: Build CDK AWS template
       id: build-cdk
-      if: ${{ steps.checkout-cdk }}
+      if: ${{ inputs.aws-account-id }}
       run: |
         [ ! -z "${{ inputs.context-file }}" ] && cp "${{ inputs.context-file }}" ${{ steps.uuid.outputs.folder }}/cdk.context.json 
         cd ${{ steps.uuid.outputs.folder }}
@@ -72,7 +72,7 @@ runs:
       shell: bash
       
     - name: Bootstrap AWS
-      if: ${{ steps.build-cdk && inputs.bootstrap }}
+      if: ${{ inputs.aws-account-id && inputs.bootstrap }}
       run: |
         cd ${{ steps.uuid.outputs.folder }}
         if [ ! -z "${{ inputs.context-file }}" ]
@@ -88,7 +88,7 @@ runs:
       
     - name: Synth AWS
       id: synth-cdk
-      if: ${{ steps.build-cdk && (inputs.scan-cdk || false) }}
+      if: ${{ inputs.aws-account-id && (inputs.scan-cdk || false) }}
       run: |
         cd ${{ steps.uuid.outputs.folder }}     
         if [ ! -z "${{ inputs.context-file }}" ]
@@ -111,7 +111,7 @@ runs:
     #    file: '${{ steps.uuid.outputs.folder }}/cdk.out/*template.json'
 
     - name: Deploy AWS
-      if: ${{ steps.build-cdk }}
+      if: ${{ inputs.aws-account-id }}
       run: |
         cd ${{ steps.uuid.outputs.folder }}      
         if [ ! -z "${{ inputs.context-file }}" ]
@@ -126,7 +126,7 @@ runs:
       shell: bash
       
     - name: Cleanup AWS CDK
-      if: ${{ steps.build-cdk }}
+      if: ${{ inputs.aws-account-id }}
       run: |
         rm -rf ${{ steps.uuid.outputs.folder }}
       shell: bash
@@ -137,10 +137,10 @@ runs:
         git clone https://github.com/fireclover/deploy-template-azure-${{ inputs.fireclover-architecture-template }}.git fc-azure-bicep
       shell: bash
         
-outputs:
-  sbom:
-    value: ${{ steps.scan.outputs.sbom }}
-    description: "Path to a JSON SBOM file for the scan"
-  vulns:
-    value: ${{ steps.scan.outputs.vulns }}
-    description: "Path to a JSON results file for the vulnerability scan"
+#outputs:
+#  sbom:
+#    value: ${{ steps.scan.outputs.sbom }}
+#    description: "Path to a JSON SBOM file for the scan"
+#  vulns:
+#    value: ${{ steps.scan.outputs.vulns }}
+#    description: "Path to a JSON results file for the vulnerability scan"
