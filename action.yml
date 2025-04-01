@@ -51,7 +51,7 @@ runs:
     - name: Get uuid for folder
       id: uuid
       run: | 
-        echo "::set-output name=folder::fc-aws-cdk-$(uuidgen)"  
+        echo "::set-output name=folder::fc-aws-cdk-$(head /dev/random|sha1sum|cut -c 1-10)"  
     - name: Checkout AWS CDK template
       if: ${{ inputs.aws-account-id }}
       id: checkout-cdk
