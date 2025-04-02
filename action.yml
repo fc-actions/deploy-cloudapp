@@ -39,7 +39,7 @@ inputs:
     description: 'Use the AWS Sustainability scanner for the resulting CDK'
   bootstrap:
     description: 'Run bootstrap for the account using CDK'
-    default: true
+    default: false
   context-file:
     description: 'CDK context file cdk.context.json that defines all context attributes for CDK. Other named parameters or cdk-parameters override the attributes in context file.'
   cdk-parameters:
@@ -54,7 +54,7 @@ runs:
         echo "::set-output name=uuid::$(head /dev/random|sha1sum|cut -c 1-10)"
 
     - uses: actions/checkout@v4
-      if: ${{ inputs.context-file }}
+      if: inputs.context-file
       with:
         sparse-checkout: |
           ${{ inputs.context-file }}
@@ -62,21 +62,21 @@ runs:
         path: context-${{ steps.uuid.outputs.uuid }}
         
     - name: Checkout AWS CDK template
-      if: ${{ inputs.aws-account-id }}
+      if: inputs.aws-account-id
       id: cdk
       run: |
         git clone https://github.com/fireclover/deploy-template-aws-${{ inputs.fireclover-architecture-template || 'spa-static-site' }}.git fc-aws-cdk-${{ steps.uuid.outputs.uuid }}
-        echo "::set-output name=folder::fc-aws-cdk-${{ steps.uuid.outputs.uuid }}"
-        CDK_ARGS=--require-approval never -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }} ${{ inputs.cdk-parameters }}
-        [ ! -z "${{ inputs.web-path }}" ] && CDK_ARGS=${CDK_ARGS} -c webPath="${{ inputs.web-path || 'dist' }}" -c folderRedirects=${{ inputs.folder-redirects || false }}
-        [ ! -z "${{ inputs.api-path }}" ] && CDK_ARGS=${CDK_ARGS} -c apiPath="${{ inputs.api-path }}" -c env='${{ inputs.api-envs }}' -c apiHandler=${{ inputs.api-handler }}
-        echo "::set-output name=cdk-args::${CDK_ARGS}"
+        echo "folder=fc-aws-cdk-${{ steps.uuid.outputs.uuid }}" >> $GITHUB_OUTPUT
+        export CDK_ARGS="--require-approval never -c domain=${{ inputs.dns-zone }} -c subdomain=${{ inputs.subdomain }} -c accountId=${{ inputs.aws-account-id }} -c region=${{ inputs.region || 'us-east-1' }} ${{ inputs.cdk-parameters }}"
+        [ ! -z "${{ inputs.web-path }}" ] && export CDK_ARGS="${CDK_ARGS} -c webPath=\"${{ inputs.web-path || 'dist' }}\" -c folderRedirects=${{ inputs.folder-redirects || false }}"
+        [ ! -z "${{ inputs.api-path }}" ] && export CDK_ARGS="${CDK_ARGS} -c apiPath=\"${{ inputs.api-path }}\" -c env='${{ inputs.api-envs }}' -c apiHandler=${{ inputs.api-handler }}"
+        echo "cdk-args=${CDK_ARGS}" >> $GITHUB_OUTPUT
         
       shell: bash
         
     - name: Build CDK AWS template
       id: build-cdk
-      if: ${{ inputs.aws-account-id }}
+      if: inputs.aws-account-id
       run: |
         [ ! -z "${{ inputs.context-file }}" ] && cp "context-${{ steps.uuid.outputs.uuid }}/${{ inputs.context-file }}" ${{ steps.cdk.outputs.folder }}/cdk.context.json 
         cd ${{ steps.cdk.outputs.folder }}
@@ -110,20 +110,20 @@ runs:
     #    file: '${{ steps.uuid.outputs.folder }}/cdk.out/*template.json'
 
     - name: Deploy AWS
-      if: ${{ inputs.aws-account-id }}
+      if: inputs.aws-account-id
       run: |
         cd ${{ steps.cdk.outputs.folder }}      
         npm run cdk deploy -- ${{ steps.cdk.outputs.cdk-args }}        
       shell: bash
       
     - name: Cleanup AWS CDK
-      if: ${{ inputs.aws-account-id }}
+      if: inputs.aws-account-id
       run: |
         rm -rf ${{ steps.cdk.outputs.folder }}
       shell: bash
       
     - name: Checkout Azure Bicep template
-      if: ${{ inputs.azure-tenant }}
+      if: inputs.azure-tenant
       run: |
         git clone https://github.com/fireclover/deploy-template-azure-${{ inputs.fireclover-architecture-template }}.git fc-azure-bicep
       shell: bash
